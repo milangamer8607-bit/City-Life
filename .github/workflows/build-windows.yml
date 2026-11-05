@@ -16,7 +16,7 @@ jobs:
       - name: Download Godot
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_win64_console.exe.zip" -OutFile godot.zip
+          Invoke-WebRequestInvoke-WebRequest -Uri "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_win64.exe.zip" -OutFile godot.zip -Uri "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_win64_console.exe.zip" -OutFile godot.zip
           Expand-Archive godot.zip -DestinationPath godot
           $exe = Get-ChildItem godot -Filter "Godot_v4.3-stable_win64_console.exe" -Recurse | Select-Object -First 1
           Copy-Item $exe.FullName godot.exe
