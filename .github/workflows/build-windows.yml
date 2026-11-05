@@ -1,0 +1,45 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Godot
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_win64_console.exe.zip" -OutFile godot.zip
+          Expand-Archive godot.zip -DestinationPath godot
+          $exe = Get-ChildItem godot -Filter "Godot_v4.3-stable_win64_console.exe" -Recurse | Select-Object -First 1
+          Copy-Item $exe.FullName godot.exe
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_win64.exe.zip" -OutFile godot_export.zip
+          Expand-Archive godot_export.zip -DestinationPath godot_export
+          $gui = Get-ChildItem godot_export -Filter "Godot_v4.3-stable_win64.exe" -Recurse | Select-Object -First 1
+          Copy-Item $gui.FullName godot_gui.exe
+
+      - name: Install export templates
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz" -OutFile templates.tpz
+          Expand-Archive templates.tpz -DestinationPath templates
+          New-Item -ItemType Directory -Force -Path "$env:APPDATA\Godot\export_templates\4.3.stable" | Out-Null
+          Copy-Item "templates\templates\*" "$env:APPDATA\Godot\export_templates\4.3.stable" -Recurse -Force
+          .\godot_gui.exe --headless --editor --path . --quit
+
+      - name: Export Windows build
+        shell: pwsh
+        run: .\godot.exe --headless --path . --export-release "Windows Desktop" CityLife.exe
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: CityLife-Windows
+          path: CityLife.exe
