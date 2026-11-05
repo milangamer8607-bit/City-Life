@@ -23,16 +23,25 @@ jobs:
       - name: Export Windows game
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path build
-          godot --headless --path . --export-release "Windows Desktop" build/CityLife.exe
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          godot --headless --path . --export-release "Windows Desktop" CityLife.exe
 
-      - name: Check executable
+      - name: Find and prepare executable
         shell: pwsh
         run: |
-          if (!(Test-Path "build/CityLife.exe")) {
-            Write-Error "CityLife.exe wurde nicht erstellt!"
+          $exe = Get-ChildItem -Path . -Filter "CityLife.exe" -Recurse |
+            Where-Object { $_.FullName -notmatch '\\.godot\\' } |
+            Select-Object -First 1
+
+          if (!$exe) {
+            Write-Error "CityLife.exe wurde nicht gefunden!"
             exit 1
           }
+
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          Copy-Item $exe.FullName "build/CityLife.exe" -Force
+
+          Write-Host "EXE gefunden: $($exe.FullName)"
 
       - name: Upload executable
         uses: actions/upload-artifact@v4
