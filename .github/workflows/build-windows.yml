@@ -1,3 +1,4 @@
+
 name: Build Windows EXE
 
 on:
@@ -22,10 +23,19 @@ jobs:
       - name: Export Windows game
         shell: pwsh
         run: |
-          godot --headless --path . --export-release "Windows Desktop" CityLife.exe
+          New-Item -ItemType Directory -Force -Path build
+          godot --headless --path . --export-release "Windows Desktop" build/CityLife.exe
+
+      - name: Check executable
+        shell: pwsh
+        run: |
+          if (!(Test-Path "build/CityLife.exe")) {
+            Write-Error "CityLife.exe wurde nicht erstellt!"
+            exit 1
+          }
 
       - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
           name: CityLife-Windows
-          path: CityLife.exe
+          path: build/CityLife.exe
